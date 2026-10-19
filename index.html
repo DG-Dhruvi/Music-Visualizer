@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f7f7fb">
+  <title>Music through Fourier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="landing" class="landing">
+    <div class="landing-brand"><span class="brand-mark"><i></i><i></i><i></i><i></i><i></i></span> MUSIC THROUGH FOURIER</div>
+    <section class="landing-center">
+      <div class="formula-preview"><span>f(t) = a₀ +</span><b>∑</b><span class="sum-limits">n = 1<br>∞</span><span>[ aₙ cos(nωt) + bₙ sin(nωt) ]</span></div>
+      <div class="landing-eyebrow">A FOURIER SOUND EXPLORER</div>
+      <h1>Make a song<br>you can <em>see.</em></h1>
+      <p>Choose a track. Move through it. See the waves and frequencies that make its sound.</p>
+      <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.flac,.ogg,.aac,.m4a,.opus" hidden>
+      <button class="choose-track" id="browseButton"><span class="choose-icon">＋</span> Choose a track <span class="button-arrow">↗</span></button>
+      <div class="file-types">MP3 · WAV · FLAC · AAC · OGG <span>·</span> UP TO 100 MB</div>
+      <div class="landing-drop" id="landingDrop"><span class="drop-symbol">↧</span> or drop your audio file here</div>
+    </section>
+    <div class="landing-foot"><span>YOUR AUDIO STAYS ON THIS DEVICE</span><span>TIME × FREQUENCY × SOUND</span></div>
+  </main>
+
+  <main id="workspace" class="workspace" hidden>
+    <header class="workspace-head">
+      <a class="wordmark" href="#" id="homeButton"><span class="brand-mark"><i></i><i></i><i></i><i></i><i></i></span> MUSIC THROUGH FOURIER</a>
+      <div class="head-center"><span class="head-pulse"></span> SOUND ANALYSIS</div>
+      <button class="new-track" id="newTrackButton">＋ <span>New track</span></button>
+    </header>
+    <section class="track-strip">
+      <div class="track-disc"><span>♫</span><div class="disc-bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="track-title"><div class="eyebrow">NOW EXPLORING</div><h1 id="trackName">—</h1><div class="track-details"><span id="trackFormat">AUDIO</span><i></i><span id="trackDuration">0:00</span></div></div>
+      <button class="play-button" id="playButton" aria-label="Play" disabled>▶</button>
+      <div class="timeline"><div class="timeline-labels"><span id="currentTime">0:00</span><span id="durationTime">0:00</span></div><input id="seekSlider" type="range" min="0" max="1000" value="0" aria-label="Move through track"><div class="timeline-hint">SCRUB THE TRACK — EVERY GRAPH FOLLOWS</div></div>
+      <audio id="audio" preload="metadata"></audio>
+    </section>
+    <section class="formula-banner"><span class="formula-caption">THE FOURIER SERIES</span><div class="formula-large"><i>f</i>(<i>t</i>) = <i>a</i><sub>0</sub> + ∑<sub>n=1</sub><sup>∞</sup> [ <i>a</i><sub>n</sub> cos(<i>nωt</i>) + <i>b</i><sub>n</sub> sin(<i>nωt</i>) ]</div><span class="formula-note">ONE SOUND · MANY WAVES</span></section>
+    <div class="graph-toolbar"><div><div class="eyebrow">THE SOUND, TAKEN APART</div><h2>Explore the waves</h2></div><div class="toolbar-hint"><span class="drag-glyph">⠿</span> Drag panels to rearrange <span class="toolbar-divider">·</span> <span>↗</span> Expand any graph</div></div>
+    <section class="graph-grid" id="graphGrid" aria-label="Audio analysis graphs">
+      <article class="graph-card span-two" draggable="true" data-graph="waveform"><header class="graph-head"><div class="graph-title"><span class="graph-index">01</span><div><h3>Song waveform</h3><p>Amplitude across the whole track</p></div></div><button class="expand-button" aria-label="Expand Song waveform">⤢</button></header><div class="canvas-box"><canvas id="waveCanvas" aria-label="Song waveform"></canvas><div class="canvas-empty" id="waveEmpty">Waveform appears when your track loads</div></div><div class="graph-foot"><span>AMPLITUDE</span><span>TIME <b>·</b> <span id="waveDuration">—</span></span></div></article>
+      <article class="graph-card" draggable="true" data-graph="sine"><header class="graph-head"><div class="graph-title"><span class="graph-index coral">02</span><div><h3>Sine components</h3><p>bₙ sin(nωt) terms</p></div></div><button class="expand-button" aria-label="Expand Sine components">⤢</button></header><div class="canvas-box"><canvas id="sineCanvas" aria-label="Sine component graph"></canvas></div><div class="graph-foot"><span>AMPLITUDE</span><span>ONE AUDIO WINDOW</span></div></article>
+      <article class="graph-card" draggable="true" data-graph="cosine"><header class="graph-head"><div class="graph-title"><span class="graph-index">03</span><div><h3>Cosine components</h3><p>aₙ cos(nωt) terms</p></div></div><button class="expand-button" aria-label="Expand Cosine components">⤢</button></header><div class="canvas-box"><canvas id="cosineCanvas" aria-label="Cosine component graph"></canvas></div><div class="graph-foot"><span>AMPLITUDE</span><span>ONE AUDIO WINDOW</span></div></article>
+      <article class="graph-card span-two featured-graph" draggable="true" data-graph="fourier"><header class="graph-head"><div class="graph-title"><span class="graph-index coral">04</span><div><h3>Fourier reconstruction</h3><p>How the sine and cosine parts combine into the sound</p></div></div><button class="expand-button" aria-label="Expand Fourier reconstruction">⤢</button></header><div class="canvas-box tall"><canvas id="fourierCanvas" aria-label="Fourier reconstructed waveform"></canvas></div><div class="graph-foot"><span><i class="key-dot violet"></i> SINE</span><span><i class="key-dot coral-dot"></i> COSINE</span><span><i class="key-dot teal"></i> RECONSTRUCTED SOUND</span><span id="windowFrequency">SELECTED MOMENT</span></div></article>
+      <article class="graph-card span-two" draggable="true" data-graph="spectrum"><header class="graph-head"><div class="graph-title"><span class="graph-index teal-text">05</span><div><h3>Frequency spectrum</h3><p>Which frequencies are present at this moment</p></div></div><span class="live-chip"><i></i> LIVE</span><button class="expand-button" aria-label="Expand Frequency spectrum">⤢</button></header><div class="canvas-box"><canvas id="spectrumCanvas" aria-label="Live frequency spectrum"></canvas></div><div class="graph-foot"><span>STRENGTH</span><span>FREQUENCY <b>·</b> 20 Hz — 20 kHz</span></div></article>
+      <article class="graph-card" draggable="true" data-graph="harmonics"><header class="graph-head"><div class="graph-title"><span class="graph-index coral">06</span><div><h3>Harmonic strengths</h3><p>Relative contribution by harmonic</p></div></div><button class="expand-button" aria-label="Expand Harmonic strengths">⤢</button></header><div class="canvas-box"><canvas id="harmonicsCanvas" aria-label="Harmonic strength graph"></canvas></div><div class="graph-foot"><span>RELATIVE STRENGTH</span><span>HARMONIC NUMBER</span></div></article>
+    </section>
+    <footer class="workspace-foot"><span>SELECT A MOMENT WITH THE TIMELINE TO UPDATE EVERY GRAPH</span><span>ANALYZED LOCALLY IN YOUR BROWSER</span></footer>
+  </main>
+  <div class="expand-overlay" id="expandOverlay" hidden><section class="expanded-card" id="expandedCard"><header class="expanded-head"><div><div class="eyebrow">EXPANDED GRAPH</div><h2 id="expandedTitle">Graph</h2></div><button class="close-expand" id="closeExpand" aria-label="Close expanded graph">×</button></header><div class="expanded-canvas"><canvas id="expandedCanvas"></canvas></div><div class="expanded-caption" id="expandedCaption"></div></section></div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
