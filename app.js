@@ -1,7 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const audio = $('audio'), fileInput = $('fileInput'), grid = $('graphGrid');
-  const state = { audioContext: null, analyser: null, source: null, buffer: null, waveform: null, url: null, worker: null, workerReady: false, analysisPending: false, pendingMoment: null, raf: 0, drag: null, selected: null, expanded: null };
+  const state = { audioContext: null, analyser: null, source: null, buffer: null, waveform: null, url: null, worker: null, workerReady: false, analysisPending: false, pendingMoment: null, raf: 0, lastDraw: 0, drag: null, selected: null, expanded: null };
   try {
     state.worker = new Worker(new URL('./analysis-worker.js', window.location.href));
     state.worker.onmessage = event => {
@@ -146,7 +146,13 @@
     state.waveform = new Array(bucketCount);
     for (let b = 0; b < bucketCount; b++) { const from = b * bucketSize, to = Math.min(state.channel.length, from + bucketSize); let low = 1, high = -1; for (let i = from; i < to; i++) { const value = state.channel[i]; if (value < low) low = value; if (value > high) high = value; } state.waveform[b] = [low, high]; }
   }
-  function animate() { if (!state.buffer) return; renderLive(); if (!audio.paused) state.raf = requestAnimationFrame(animate); }
+  function animate(timestamp = 0) {
+    if (!state.buffer) return;
+    // Twenty canvas updates per second are smooth for the spectrum and leave
+    // the main thread free for playback controls and browser painting.
+    if (timestamp - state.lastDraw >= 50) { renderLive(); state.lastDraw = timestamp; }
+    if (!audio.paused) state.raf = requestAnimationFrame(animate);
+  }
   function goWorkspace(file) {
     $('landing').hidden = true; $('workspace').hidden = false;
     $('trackName').textContent = file.name.replace(/\.[^.]+$/, ''); $('trackFormat').textContent = (file.name.split('.').pop() || 'AUDIO').toUpperCase() + ' AUDIO';
@@ -165,8 +171,11 @@
       state.buffer = await state.audioContext.decodeAudioData(await file.arrayBuffer());
       if (!state.worker) throw new Error('Web Worker is unavailable. Serve the app over HTTPS or localhost.');
       state.workerReady = false; state.analysisPending = false; state.pendingMoment = null;
-      const audioSamples = state.buffer.getChannelData(0).slice();
-      state.worker.postMessage({ type: 'init', samples: audioSamples.buffer }, [audioSamples.buffer]);
+      // The decoded buffer is no longer needed on the page thread. Transfer its
+      // channel memory directly instead of copying a long song into another array.
+      const audioSamples = state.buffer.getChannelData(0);
+      try { state.worker.postMessage({ type: 'init', samples: audioSamples.buffer }, [audioSamples.buffer]); }
+      catch (_) { const copy = audioSamples.slice(); state.worker.postMessage({ type: 'init', samples: copy.buffer }, [copy.buffer]); }
       goWorkspace(file); $('trackDuration').textContent = timeLabel(state.buffer.duration); $('durationTime').textContent = timeLabel(state.buffer.duration); $('waveDuration').textContent = timeLabel(state.buffer.duration);
       $('playButton').disabled = false; $('waveEmpty').hidden = false; $('waveEmpty').textContent = 'Preparing waveform…'; audio.currentTime = 0; $('seekSlider').value = '0';
     } catch (error) { console.error(error); toast('This track could not be decoded. Try MP3, WAV, or FLAC.'); }
